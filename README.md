@@ -1,5 +1,7 @@
 # Calendar_Mod_v1.0
 Mod that allows you to add custom events to your Moni's calendar
+How to install:
+Just put the calendar.rpy file in the Submods folder. The path should look something like: ...\game\Submods\Calendar.rpy
 Some tips:
 1)In order to add the event to the calendar,you need to put the event name , event month and date in that order separated by comas. For example : I love Monika,4,3
 2)Whatever you add should appear in the calendar immideatly .However when you delete something it dissapears only after you reload the game
