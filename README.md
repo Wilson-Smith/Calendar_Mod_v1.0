@@ -12,3 +12,5 @@ To be improved:
 3)It would be better if after deleting an event , it would go away from the calendar immideatly ,without a need to restart a game.
 4)Some event specific reactions .For example , if the reaction name mentions "shopping" Monika would ask you to take her with you.
 5)Do not hesitate to contact me. Any suggestion would be appreciated. 
+
+Tested on the Monika_After_Story-0.12.15-unstable.2023.09.20.168
