@@ -1,7 +1,10 @@
 #you need this to work with the calendar
 $ import store.mas_calendar as calendar
 #list of events that you want added
-default persistent.SI_mod_events = []
+init -1 python:
+    if not hasattr(persistent, "SI_mod_events"):
+        persistent.SI_mod_events = []
+
 #Option to add something to the calendar
 init 5 python:
     addEvent(
@@ -14,6 +17,7 @@ init 5 python:
             unlocked=True
         )
     )
+
 #Adding events to the calendar everytime you open a game
 init 5 python:
     for item in persistent.SI_mod_events:
@@ -21,10 +25,27 @@ init 5 python:
         name_month_day = item.split(',')
         #if it contains a name ,month and a day then add them to the calendar
         if len(name_month_day) == 3:
-            calendar_event_name = name_month_day[0]
+            calendar_event_name = name_month_day[0].strip()
             calendar_event_month = name_month_day[1]
             calendar_event_day = name_month_day[2]
-            calendar.addRepeatable(calendar_event_name,_(calendar_event_name),month=int(int(calendar_event_month)),day=int(int(calendar_event_day)),year_param=list())
+            if calendar_event_name:
+                try:
+                    calendar_event_month = int(calendar_event_month)
+                    calendar_event_day = int(calendar_event_day)
+                except Exception:
+                    continue
+                #if calendar_event_month.type()=='int':
+                if calendar_event_month >= 1 and calendar_event_month <= 12:  
+                    max_day = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][calendar_event_month - 1]
+                    #if calendar_event_day.type()=='int'
+                    if calendar_event_day >= 1 and calendar_event_day <= max_day:
+                        calendar.addRepeatable(
+                            calendar_event_name,
+                            _(calendar_event_name),
+                            month=calendar_event_month,
+                            day=calendar_event_day,
+                            year_param=list()
+                            )
 
 #adding something to the calendar
 label Add_to_callendar:
@@ -32,16 +53,39 @@ label Add_to_callendar:
     $ Ok = True
     m 7wub "[player], of course!"
     m 2dua "I know you are a busy guy!"
-    m 4wub "Okay! What do you want me to write in the calendar?"
+    m 4dua "Okay! What do you want me to write in the calendar?"
     python:
-        calendar_event_name_month_day = renpy.input("Okay! What do you want me to write in the calendar?", length=35)
+        calendar_event_name_month_day = renpy.input("Okay! What do you want me to write in the calendar?", length=200)
         if len(calendar_event_name_month_day.split(',')) == 3:
-            persistent.SI_mod_events.append(calendar_event_name_month_day)
-            name_month_day = persistent.SI_mod_events[-1].split(',')   
+            name_month_day = calendar_event_name_month_day.split(',')   
             calendar_event_name = name_month_day[0]
             calendar_event_month = name_month_day[1]
             calendar_event_day = name_month_day[2]
-            calendar.addRepeatable(calendar_event_name,_(calendar_event_name),month=int(int(calendar_event_month)),day=int(int(calendar_event_day)),year_param=list())
+            if not calendar_event_name:
+                renpy.notify("Event name cannot be empty.")
+            else:
+                try:
+                    calendar_event_month = int(calendar_event_month)
+                    calendar_event_day = int(calendar_event_day)
+                except Exception:
+                    renpy.notify("Month and day must be integers (e.g., '3' for March).")
+                else:
+                    if calendar_event_month < 1 or calendar_event_month > 12:
+                        renpy.notify("Month must be between 1 and 12.")
+                    else:
+                        max_day = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][calendar_event_month - 1]
+                        if calendar_event_day < 1 or calendar_event_day > max_day:
+                            renpy.notify("Day must be between 1 and {} for month {}.".format(max_day, calendar_event_month))
+                        else:
+                            calendar.addRepeatable(
+                                calendar_event_name, 
+                                _(calendar_event_name),
+                                month=calendar_event_month,
+                                day=calendar_event_day,
+                                year_param=list()
+                            )
+                            persistent.SI_mod_events.append(calendar_event_name_month_day) 
+                            renpy.notify("Event '{}' added for {}/{}.".format(calendar_event_name, calendar_event_month, calendar_event_day))
         else:
             Ok = False
             
@@ -82,5 +126,6 @@ label Remove_from_calendar:
             m 2lksdlb "Strange..."
             m 2eksdlc "I cannot find [calendar_event_name_remove]"
             m 1etc "Are you sure you typed it correctly?"
+    return
             
 
