@@ -58,7 +58,7 @@ label Add_to_calendar:
     $ event_name = renpy.input("What is the name of the event?", length=40).strip()
     
     if event_name == "":
-        m 1eksdlc "Oh, you didn't say anything..."
+        m 2eka "Oh, you didn't say anything..."
         m 1eka "We can try again later."
         return
 
@@ -68,7 +68,7 @@ label Add_to_calendar:
     $ event_month_str = renpy.input("Month (1-12)", allow="0123456789", length=2).strip()
     
     if event_month_str == "":
-        m 1eksdlc "I need a month to write it down..."
+        m 2eka "I need a month to write it down..."
         return
 
     # --- INPUT 3: DAY ---
@@ -76,7 +76,7 @@ label Add_to_calendar:
     $ event_day_str = renpy.input("Day (1-31)", allow="0123456789", length=2).strip()
 
     if event_day_str == "":
-        m 1eksdlc "I need the day too!"
+        m 2eka "I need the day too!"
         return
 
     # --- VALIDATION AND SAVING ---
@@ -97,7 +97,7 @@ label Add_to_calendar:
                 else:
                     isValid = True
         except ValueError:
-             error_message = "That doesn't look like a valid number..."
+                error_message = "That doesn't look like a valid number..."
 
     if isValid:
         # We construct the comma-separated string just like before so the init block can read it
@@ -109,7 +109,7 @@ label Add_to_calendar:
         # Add to the active calendar immediately
         $ calendar.addRepeatable(event_name, _(event_name), month=event_month, day=event_day, year_param=list())
         
-        m 2dua "Done! I've added [event_name] to the calendar on [event_month]/[event_day]."
+        m 1hubla "Done! I've added [event_name] to the calendar on [event_month]/[event_day]."
         m 4eub "Thanks for telling me!"
     else:
         m 2lksdlb "Wait a second..."
@@ -137,12 +137,12 @@ label Remove_from_calendar:
     #Getting the index of the elements with the same name 
     $ matches = [i for i, item in enumerate(persistent.SI_mod_events) if item.split(",")[0] == calendar_event_name_remove]
     if matches:
-        m 2dua "Found it!"
+        m 1hubla "Found it!"
         # Check if the index is valid before removing
         if 0 <= matches[0] < len(persistent.SI_mod_events):
             #deleting it from the persistent
             $ del persistent.SI_mod_events[matches[0]]
-            m 2dua "When you open the game next time, you will not see it!"
+            m 1eublb "When you open the game next time, you will not see it!"
             m 2eka "I can't remove it from the calendar view instantly, but it is gone from my list."
         else:
             m 2lksdlb "That's not supposed to happen..."
