@@ -1,5 +1,6 @@
 #you need this to work with the calendar
 $ import store.mas_calendar as calendar
+
 #list of events that you want added
 init -1 python:
     if not hasattr(persistent, "SI_mod_events"):
@@ -10,7 +11,7 @@ init 5 python:
     addEvent(
         Event(
             persistent.event_database,
-            eventlabel="Add_to_callendar",
+            eventlabel="Add_to_calendar",
             prompt="Can you add something to your calendar?",
             category=["Self-improvement"],
             pool=True,
@@ -48,50 +49,73 @@ init 5 python:
                             )
 
 #adding something to the calendar
-label Add_to_callendar:
-    #variable to check if the response a player has given is in the correct format(I feel like there is a more elegant solution)
-    $ Ok = True
+label Add_to_calendar:
     m 7wub "[player], of course!"
     m 2dua "I know you are a busy guy!"
-    m 4dua "Okay! What do you want me to write in the calendar?"
+    m 4dua "Okay! Let's get the details down."
+    
+    # --- INPUT 1: NAME ---
+    $ event_name = renpy.input("What is the name of the event?", length=40).strip()
+    
+    if event_name == "":
+        m 1eksdlc "Oh, you didn't say anything..."
+        m 1eka "We can try again later."
+        return
+
+    # --- INPUT 2: MONTH ---
+    m 2eub "Got it, [event_name]! And which month is that in?"
+    # allow="0123456789" ensures only numbers can be typed
+    $ event_month_str = renpy.input("Month (1-12)", allow="0123456789", length=2).strip()
+    
+    if event_month_str == "":
+        m 1eksdlc "I need a month to write it down..."
+        return
+
+    # --- INPUT 3: DAY ---
+    m 2eub "Okay, month [event_month_str]. And the day?"
+    $ event_day_str = renpy.input("Day (1-31)", allow="0123456789", length=2).strip()
+
+    if event_day_str == "":
+        m 1eksdlc "I need the day too!"
+        return
+
+    # --- VALIDATION AND SAVING ---
     python:
-        calendar_event_name_month_day = renpy.input("Okay! What do you want me to write in the calendar?", length=200)
-        if len(calendar_event_name_month_day.split(',')) == 3:
-            name_month_day = calendar_event_name_month_day.split(',')   
-            calendar_event_name = name_month_day[0]
-            calendar_event_month = name_month_day[1]
-            calendar_event_day = name_month_day[2]
-            if not calendar_event_name:
-                renpy.notify("Event name cannot be empty.")
-            else:
-                try:
-                    calendar_event_month = int(calendar_event_month)
-                    calendar_event_day = int(calendar_event_day)
-                except Exception:
-                    renpy.notify("Month and day must be integers (e.g., '3' for March).")
-                else:
-                    if calendar_event_month < 1 or calendar_event_month > 12:
-                        renpy.notify("Month must be between 1 and 12.")
-                    else:
-                        max_day = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][calendar_event_month - 1]
-                        if calendar_event_day < 1 or calendar_event_day > max_day:
-                            renpy.notify("Day must be between 1 and {} for month {}.".format(max_day, calendar_event_month))
-                        else:
-                            calendar.addRepeatable(
-                                calendar_event_name, 
-                                _(calendar_event_name),
-                                month=calendar_event_month,
-                                day=calendar_event_day,
-                                year_param=list()
-                            )
-                            persistent.SI_mod_events.append(calendar_event_name_month_day) 
-                            renpy.notify("Event '{}' added for {}/{}.".format(calendar_event_name, calendar_event_month, calendar_event_day))
-        else:
-            Ok = False
+        isValid = False
+        error_message = ""
+        
+        try:
+            event_month = int(event_month_str)
+            event_day = int(event_day_str)
             
-    if Ok == False:
-        m 1etc "Are you sure you typed it correctly?"
-        m 3eub "Make sure you have written name,month,day separated by comas!"
+            if event_month < 1 or event_month > 12:
+                error_message = "The month has to be between 1 and 12."
+            else:
+                max_day = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][event_month - 1]
+                if event_day < 1 or event_day > max_day:
+                    error_message = "Month {} only has {} days.".format(event_month, max_day)
+                else:
+                    isValid = True
+        except ValueError:
+             error_message = "That doesn't look like a valid number..."
+
+    if isValid:
+        # We construct the comma-separated string just like before so the init block can read it
+        $ persistent_entry = "{},{},{}".format(event_name, event_month, event_day)
+        
+        # Add to persistent storage
+        $ persistent.SI_mod_events.append(persistent_entry)
+        
+        # Add to the active calendar immediately
+        $ calendar.addRepeatable(event_name, _(event_name), month=event_month, day=event_day, year_param=list())
+        
+        m 2dua "Done! I've added [event_name] to the calendar on [event_month]/[event_day]."
+        m 4eub "Thanks for telling me!"
+    else:
+        m 2lksdlb "Wait a second..."
+        m "[error_message]"
+        m 1eka "Let's try that again when you're ready."
+
     return
 
 #option to remove something from the calendar
@@ -116,16 +140,15 @@ label Remove_from_calendar:
         m 2dua "Found it!"
         # Check if the index is valid before removing
         if 0 <= matches[0] < len(persistent.SI_mod_events):
-            #deleting it from the persistent(It would also be good if I could remove it from the calendar right now as well)
+            #deleting it from the persistent
             $ del persistent.SI_mod_events[matches[0]]
-            m 2dua "When you open the game next time , you will not see it!"
+            m 2dua "When you open the game next time, you will not see it!"
+            m 2eka "I can't remove it from the calendar view instantly, but it is gone from my list."
         else:
-            m 2lksdlb "That's not supposed to hapen..."
+            m 2lksdlb "That's not supposed to happen..."
             m 2lksdlb "Probably something is wrong with the code"
     else:
             m 2lksdlb "Strange..."
             m 2eksdlc "I cannot find [calendar_event_name_remove]"
             m 1etc "Are you sure you typed it correctly?"
     return
-            
-
